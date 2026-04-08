@@ -187,7 +187,6 @@ export default function ResultClient({
           justifyContent: "space-between",
           padding: "14px 20px",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          background: "rgba(10,10,10,0.95)",
           background: "rgba(10,10,10,1)",
           position: "sticky",
           top: 0,

@@ -3,7 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ["api.screenshotone.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "api.screenshotone.com",
+      },
+    ],
   },
 };
 

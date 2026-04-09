@@ -2,7 +2,7 @@ export default function Loading() {
   return (
     <main
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         background: "#0a0a0a",
         color: "#f0f0f0",
         display: "flex",

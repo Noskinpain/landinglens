@@ -64,6 +64,7 @@ async function analyzeScreenshot(screenshotBase64: string) {
       body: JSON.stringify({
         model: "meta-llama/llama-4-scout-17b-16e-instruct",
         max_tokens: 2000,
+        temperature: 0.3,
         messages: [
           {
             role: "user",
@@ -76,45 +77,48 @@ async function analyzeScreenshot(screenshotBase64: string) {
               },
               {
                 type: "text",
-                text: `You are a brutally honest conversion expert and YC-level critic reviewing a founder's landing page.
+                text: `You are a brutally honest, straight-talking conversion expert and startup roaster. You hate marketing fluff and academic jargon. You speak in punchy, plain English that anyone can understand, but your insights are razor-sharp. 
 
-Your job is to analyze this page and return an honest audit. If the page is genuinely good, say so and score it high. If it has serious problems, be brutal and specific.
+Your job is to provide a unique, no-BS audit that exposes exactly why a page isn't getting signups (or why it's great) by pointing out painfully obvious but commonly missed flaws.
+
+EVALUATION PATTERN:
+1. Explain the problem like you're talking to a founder over coffee. Be brutal but perfectly clear.
+2. Focus on specific things: Is the headline confusing? Is there a wall of text? Does the button blend into the background? Is there a lack of trust because there are no reviews?
+3. NEVER use big academic words (no "heuristics", "salience", "Hick's Law", or "cognitive load"). Use plain English (e.g., "Invisible button", "Too much reading", "Confusing intro", "No proof anyone uses this").
 
 Return a JSON object with this exact structure:
 
 {
-  "score": <number 0-100, honest score based on conversion potential>,
+  "score": <number 0-100, accurate evaluation. 90+ for amazing pages, below 40 for disasters.>,
   "grade": <one of: "Conversion killer" | "Needs work" | "Getting there" | "Strong page" | "High converter">,
-  "verdict": <2-3 sentence brutal honest summary of the page. Sound like a senior growth expert talking directly to the founder. Use "you" and "your". Be specific about what you actually see.>,
+  "verdict": <2-3 sentence brutal, honest summary. Speak like a smart friend cutting through the noise. Start by stating the main problem (e.g. "You get traffic, but nobody knows what you actually do"). Use "you" and "your". Keep the language simple but the insight deep.>,
   "stats": {
     "issues_found": <total number of issues found>,
     "critical_count": <number of critical issues>,
     "bounce_estimate": <estimated bounce rate as string e.g. "~65%">,
-    "upside": <conversion upside if fixes applied e.g. "+2.4x" for bad pages or "+12%" for good pages>
+    "upside": <conversion upside if fixes applied e.g. "+2.4x" or "+12%">
   },
   "issues": [
     {
       "id": <number>,
-      "label": <issue name>,
+      "label": <2-4 word simple issue name e.g. "Headline is confusing", "Invisible Button", "Wall of Text">,
       "severity": <"critical" | "warning" | "good">,
       "score": <number 1-10>,
-      "roast": <1-2 sentences. Brutal, specific, references actual elements visible on the page. No generic advice.>,
-      "fix": <1 sentence concrete fix or rewrite suggestion. Actionable.>
+      "roast": <1-2 sentences. Brutal, plain-English explanation of why this part sucks or works. Reference the exact text or color on the screen. No fluff.>,
+      "fix": <1 sentence concrete, dead-simple fix. What exactly should they change right now?>
     }
   ]
 }
 
 Rules for issues:
-- Return ONLY real issues you actually see - between 3 and 10 issues total
-- Rank them by severity - critical first, then warning, then good
-- For high-scoring pages, include what is working well as "good" severity items
-- NEVER give generic advice - reference specific text, colors, button labels, or layout choices you see
-- Score each issue honestly - a great headline gets 9/10, a terrible one gets 2/10
-- "critical" = actively killing conversions
-- "warning" = hurting but not fatal
-- "good" = working well, worth acknowledging
+- Return 3-8 issues total. Focus on the real reasons people leave the site.
+- Never use generic text like "needs better UI" -> say "the gray text on a white background is impossible to read."
+- Never just say "make it pop" -> say "your main button is the same color as your background, change it to a bright contrast color."
+- "critical" = making people leave immediately
+- "warning" = annoying but not a dealbreaker
+- "good" = actually working well
 
-Respond ONLY with raw valid JSON. No markdown, no backticks, no explanation.`,
+Respond ONLY with raw valid JSON. No markdown, no backticks.`,
               },
             ],
           },

@@ -112,7 +112,7 @@ export default function ResultClient({
   return (
     <main
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         background: "#0a0a0a",
         fontFamily: "var(--font-body)",
         color: "#f0f0f0",
@@ -133,6 +133,11 @@ export default function ResultClient({
         @keyframes scoreReveal {
           from { stroke-dashoffset: 565; }
           to { stroke-dashoffset: var(--target-offset); }
+        }
+        .skeleton {
+          animation: pulse 1.5s infinite ease-in-out;
+          background: rgba(255,255,255,0.06);
+          border-radius: 4px;
         }
         .fade-up {
           animation: fadeUp 0.4s ease forwards;
@@ -482,6 +487,24 @@ export default function ResultClient({
               </div>
             </div>
           )}
+          {!result && !analyzeError && (
+            <div className="fade-up" style={{ pointerEvents: "none" }}>
+              <div className="skeleton" style={{ width: 80, height: 26, borderRadius: 999, marginBottom: 20 }} />
+              <div style={{ display: "flex", gap: 20, marginBottom: 22 }}>
+                <div className="skeleton" style={{ width: 80, height: 80, borderRadius: "50%", flexShrink: 0 }} />
+                <div style={{ flex: 1, padding: "8px 0" }}>
+                  <div className="skeleton" style={{ width: "70%", height: 22, borderRadius: 6, marginBottom: 16 }} />
+                  <div className="skeleton" style={{ width: "90%", height: 14, borderRadius: 4, marginBottom: 8 }} />
+                  <div className="skeleton" style={{ width: "60%", height: 14, borderRadius: 4 }} />
+                </div>
+              </div>
+              <div className="stat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="skeleton" style={{ height: 72, borderRadius: 10 }} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ── SCREENSHOT ── */}
@@ -617,6 +640,28 @@ export default function ResultClient({
         </div>
 
         {/* ── ISSUES ── */}
+        {!result && !analyzeError && (
+          <div className="fade-up" style={{ pointerEvents: "none" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, paddingTop: 8 }}>
+              <div className="skeleton" style={{ width: 140, height: 12 }} />
+              <div className="skeleton" style={{ width: 50, height: 12 }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ background: "#111", borderRadius: 14, border: "1px solid rgba(255,255,255,0.08)", padding: "16px 18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10 }}>
+                    <div className="skeleton" style={{ width: "60%", height: 18, borderRadius: 6 }} />
+                    <div className="skeleton" style={{ width: 70, height: 22, borderRadius: 999 }} />
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16 }}>
+                    <div className="skeleton" style={{ width: 28, height: 14, borderRadius: 4 }} />
+                    <div className="skeleton" style={{ flex: 1, height: 3, borderRadius: 99 }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {result && (
           <div className="fade-up">
             {/* Section label */}

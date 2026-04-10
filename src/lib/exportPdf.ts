@@ -20,6 +20,7 @@ type AuditResult = {
     quick_win_detail: string;
   };
   teardown: TeardownSection[];
+  comprehensive_playbook?: string;
 };
 
 function statusRGB(status: string): [number, number, number] {

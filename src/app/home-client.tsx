@@ -283,7 +283,7 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
                 border: "1.5px solid var(--border-strong)",
                 borderRadius: "var(--radius-md)",
                 padding: "14px 18px",
-                fontSize: 15,
+                fontSize: 16,
                 color: "var(--text-primary)",
                 outline: "none",
                 transition: "border-color 0.2s",
@@ -381,7 +381,7 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
             />
           )}
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 24 }}>
             <div style={{ display: "flex", alignItems: "center" }}>
               {[
                 "https://randomuser.me/api/portraits/men/32.jpg",
@@ -393,11 +393,11 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
                   key={i}
                   src={src}
                   style={{
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 32,
                     borderRadius: "50%",
-                    border: "2px solid var(--bg)",
-                    marginLeft: i === 0 ? 0 : -10,
+                    border: "2px solid #0a0a0a",
+                    marginLeft: i === 0 ? 0 : -12,
                     zIndex: 10 - i,
                     position: "relative",
                   }}
@@ -405,7 +405,7 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
                 />
               ))}
             </div>
-            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0, textAlign: "center" }}>
               <strong style={{ color: "var(--text-secondary)" }}>
                 200+ founders
               </strong>{" "}
@@ -611,7 +611,7 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
           <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
             © 2026 LandingLens
           </span>
-          <span>Built by samteic</span>
+          <span>Built by <a href="https://x.com/samteic" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', color: 'inherit' }}>samteic</a></span>
         </div>
       </footer>
     </main>

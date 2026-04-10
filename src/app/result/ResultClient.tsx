@@ -26,13 +26,13 @@ export type AuditResult = {
   stats: {
     issues_found: number;
     critical_count: number;
-    critical_count: number;
     main_bottleneck: string;
     bottleneck_impact: string;
     quick_win: string;
     quick_win_detail: string;
   };
   teardown: TeardownSection[];
+  comprehensive_playbook: string;
 };
 
 function severityColor(s: string) {
@@ -93,6 +93,7 @@ export default function ResultClient({
 }: ResultClientProps) {
   const router = useRouter();
   const [downloading, setDownloading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
   function toggleSection(idx: number) {
@@ -110,7 +111,8 @@ export default function ResultClient({
     try {
       const { exportToPdf } = await import("@/lib/exportPdf");
       await exportToPdf(screenshotSrc, result, url);
-    } catch {
+    } catch (err) {
+      console.error("PDF Export Error:", err);
       alert("Export failed. Please try again.");
     } finally {
       setDownloading(false);
@@ -928,11 +930,11 @@ export default function ResultClient({
               >
                 <button
                   className="dl-btn"
-                  onClick={handleDownload}
-                  disabled={downloading}
+                  disabled
+                  title="Checkout system coming soon"
                   style={{
-                    background: "#fff",
-                    color: "#0a0a0a",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.4)",
                     border: "none",
                     borderRadius: 10,
                     padding: "13px 24px",
@@ -940,34 +942,34 @@ export default function ResultClient({
                     fontWeight: 800,
                     fontFamily: "var(--font-heading)",
                     letterSpacing: "-0.01em",
-                    cursor: downloading ? "not-allowed" : "pointer",
-                    opacity: downloading ? 0.5 : 1,
-                    transition: "background 0.2s, opacity 0.2s",
+                    cursor: "not-allowed",
                     flex: 1,
                   }}
                 >
-                  {downloading ? "Generating..." : "Download PDF →"}
+                  Download PDF (Coming soon)
                 </button>
                 <button
                   className="copy-btn"
                   onClick={() => {
                     navigator.clipboard.writeText(window.location.href);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
                   }}
                   style={{
-                    background: "rgba(255,255,255,0.05)",
-                    color: "rgba(255,255,255,0.5)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: copied ? "rgba(92,184,92,0.1)" : "rgba(255,255,255,0.05)",
+                    color: copied ? "#5cb85c" : "rgba(255,255,255,0.5)",
+                    border: copied ? "1px solid rgba(92,184,92,0.3)" : "1px solid rgba(255,255,255,0.1)",
                     borderRadius: 10,
                     padding: "13px 18px",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
                     fontFamily: "var(--font-body)",
-                    transition: "background 0.2s, border-color 0.2s",
+                    transition: "all 0.2s ease",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  🔗 Copy link
+                  {copied ? "✅ Copied!" : "🔗 Copy link"}
                 </button>
                 <button
                   className="copy-btn"

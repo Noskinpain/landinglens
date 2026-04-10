@@ -66,7 +66,8 @@ Return a JSON object with this exact structure:
       "analysis": <3-4 sentences of deep dive analysis of this specific section. Identify exact text, colors, and layout blocks. Brutal and plain-English. Highlight what works well too.>,
       "fix": <concrete, actionable prescription for this section. What exactly should they change right now?>
     }
-  ]
+  ],
+  "comprehensive_playbook": <4-5 paragraphs. A deep, high-value, step-by-step conversion roadmap. This is the premium PDF report content. Detail exactly what they should do this week, next week, and in 30 days to fix their site.>
 }
 
 Rules for teardown sections:

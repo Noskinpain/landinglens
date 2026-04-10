@@ -1,11 +1,9 @@
 import jsPDF from "jspdf";
 
-type Issue = {
-  id: number;
-  label: string;
-  severity: "critical" | "warning" | "good";
-  score: number;
-  roast: string;
+type TeardownSection = {
+  section_name: string;
+  status: "pass" | "fail";
+  analysis: string;
   fix: string;
 };
 
@@ -16,15 +14,16 @@ type AuditResult = {
   stats: {
     issues_found: number;
     critical_count: number;
-    bounce_estimate: string;
-    upside: string;
+    main_bottleneck: string;
+    bottleneck_impact: string;
+    quick_win: string;
+    quick_win_detail: string;
   };
-  issues: Issue[];
+  teardown: TeardownSection[];
 };
 
-function severityRGB(s: string): [number, number, number] {
-  if (s === "critical") return [226, 75, 74];
-  if (s === "warning") return [239, 159, 39];
+function statusRGB(status: string): [number, number, number] {
+  if (status === "fail") return [226, 75, 74];
   return [99, 153, 34];
 }
 
@@ -131,19 +130,19 @@ export async function exportToPdf(
   const statW = CW / 3;
   const stats = [
     {
-      label: "ISSUES FOUND",
-      value: `${result.stats.issues_found}`,
-      sub: `${result.stats.critical_count} critical`,
+      label: "PASSED",
+      value: `${result.teardown.filter(s => s.status === "pass").length}`,
+      sub: `out of ${result.teardown.length} sections`,
     },
     {
-      label: "BOUNCE ESTIMATE",
-      value: result.stats.bounce_estimate,
-      sub: "Visitors leaving",
+      label: "MAIN BOTTLENECK",
+      value: result.stats.main_bottleneck,
+      sub: result.stats.bottleneck_impact,
     },
     {
-      label: "UPSIDE POTENTIAL",
-      value: result.stats.upside,
-      sub: "If fixes applied",
+      label: "QUICK WIN",
+      value: result.stats.quick_win,
+      sub: result.stats.quick_win_detail,
     },
   ];
 
@@ -176,21 +175,35 @@ export async function exportToPdf(
       img.onload = () => res();
       img.onerror = () => rej();
     });
-    const imgH = Math.min((img.naturalHeight / img.naturalWidth) * CW, 65);
+    
+    const maxH = 120;
+    let imgH = (img.naturalHeight / img.naturalWidth) * CW;
+    let imgW = CW;
+    let offsetX = 0;
+    
+    if (imgH > maxH) {
+      imgH = maxH;
+      imgW = imgH / (img.naturalHeight / img.naturalWidth);
+      offsetX = (CW - imgW) / 2;
+    }
+
+    if (y + imgH + 20 > H - 10) {
+      y = newPage();
+    }
 
     // Browser bar mock
     pdf.setFillColor(...mid);
-    pdf.roundedRect(M, y, CW, imgH + 8, 3, 3, "F");
+    pdf.roundedRect(M + offsetX, y, imgW, imgH + 8, 3, 3, "F");
     [
       [255, 95, 87],
       [254, 188, 46],
       [40, 200, 64],
     ].forEach(([r, g, b], i) => {
       pdf.setFillColor(r, g, b);
-      pdf.circle(M + 5 + i * 6, y + 4, 1.5, "F");
+      pdf.circle(M + offsetX + 5 + i * 6, y + 4, 1.5, "F");
     });
 
-    pdf.addImage(img, "JPEG", M, y + 7, CW, imgH);
+    pdf.addImage(img, "JPEG", M + offsetX, y + 7, imgW, imgH);
     y += imgH + 16;
   } catch {
     y += 4;
@@ -205,19 +218,19 @@ export async function exportToPdf(
   pdf.setTextColor(...muted);
   pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
-  pdf.text("ISSUES RANKED BY DAMAGE", M, y);
+  pdf.text("FULL TEARDOWN", M, y);
   y += 8;
 
-  result.issues.forEach((issue) => {
-    const roastLines = pdf.splitTextToSize(issue.roast, CW - 8);
-    const fixLines = pdf.splitTextToSize(`→ ${issue.fix}`, CW - 8);
-    const cardH = 8 + roastLines.length * 5 + 4 + fixLines.length * 5 + 8;
+  result.teardown.forEach((section) => {
+    const roastLines = pdf.splitTextToSize(section.analysis, CW - 12);
+    const fixLines = pdf.splitTextToSize(`→ ${section.fix}`, CW - 12);
+    const cardH = 12 + roastLines.length * 5 + 6 + fixLines.length * 5 + 10;
 
     if (y + cardH > H - 16) {
       y = newPage();
     }
 
-    const [br, bg, bb] = severityRGB(issue.severity);
+    const [br, bg, bb] = statusRGB(section.status);
 
     // Card bg
     pdf.setFillColor(...mid);
@@ -231,39 +244,74 @@ export async function exportToPdf(
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "bold");
     pdf.setTextColor(...light);
-    pdf.text(issue.label, M + 6, y + 7);
+    pdf.text(section.section_name, M + 8, y + 7);
 
-    // Score
+    // Status
     pdf.setFontSize(8);
     pdf.setTextColor(br, bg, bb);
-    pdf.text(`${issue.score}/10`, W - M - 12, y + 7);
+    pdf.text(section.status.toUpperCase(), W - M - 14, y + 7);
 
-    // Score bar track
-    const barX = M + 6;
-    const barY = y + 10;
-    const barW = CW - 20;
-    pdf.setFillColor(50, 50, 50);
-    pdf.roundedRect(barX, barY, barW, 1.5, 0.5, 0.5, "F");
-    pdf.setFillColor(br, bg, bb);
-    pdf.roundedRect(barX, barY, (issue.score / 10) * barW, 1.5, 0.5, 0.5, "F");
-
-    // Roast text
+    // Analysis text
     pdf.setFontSize(8.5);
     pdf.setFont("helvetica", "normal");
     pdf.setTextColor(...muted);
-    pdf.text(roastLines, M + 6, y + 16);
+    pdf.text(roastLines, M + 8, y + 16);
 
     // Fix box
     const fixY = y + 16 + roastLines.length * 5 + 2;
     pdf.setFillColor(30, 30, 30);
-    pdf.roundedRect(M + 4, fixY, CW - 8, fixLines.length * 5 + 4, 1, 1, "F");
+    pdf.roundedRect(M + 6, fixY, CW - 12, fixLines.length * 5 + 6, 1, 1, "F");
     pdf.setFontSize(8);
     pdf.setFont("helvetica", "italic");
     pdf.setTextColor(...accent);
-    pdf.text(fixLines, M + 8, fixY + 5);
+    pdf.text(fixLines, M + 10, fixY + 6);
 
-    y += cardH + 4;
+    y += cardH + 6;
   });
+
+  // ── Premium Comprehensive Playbook ──
+  if (result.comprehensive_playbook) {
+    newPage();
+    let pbY = 30;
+
+    pdf.setFillColor(...accent);
+    pdf.rect(0, 0, W, 2, "F");
+
+    pdf.setTextColor(...accent);
+    pdf.setFontSize(16);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("1-MONTH CONVERSION ROADMAP", M, pbY);
+    pbY += 12;
+    
+    pdf.setDrawColor(...accent);
+    pdf.setLineWidth(0.5);
+    pdf.line(M, pbY, M + CW, pbY);
+    pbY += 12;
+
+    pdf.setTextColor(...light);
+    pdf.setFontSize(9.5);
+    pdf.setFont("helvetica", "normal");
+    
+    // Split by newlines from LLM to preserve paragraphs
+    const paragraphs = result.comprehensive_playbook.split('\n');
+    
+    paragraphs.forEach(paragraph => {
+      // Ignore empty lines
+      if (paragraph.trim() === "") return;
+      
+      const pgLines = pdf.splitTextToSize(paragraph, CW);
+      const blockH = pgLines.length * 5;
+      
+      if (pbY + blockH > H - 20) {
+        pbY = newPage() + 20;
+      }
+      
+      pdf.text(pgLines, M, pbY);
+      pbY += blockH + 6; // Add spacing between paragraphs
+    });
+    
+    y = pbY;
+  }
 
   // ── Footer on last page ──
   if (y + 14 > H) {

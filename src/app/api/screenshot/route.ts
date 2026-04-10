@@ -26,9 +26,9 @@ export async function GET(req: NextRequest) {
     const params: Record<string, string> = {
       access_key: accessKey,
       url: url,
-      viewport_width: "1200",
-      viewport_height: "900",
-      full_page: "false",
+      viewport_width: "1280",
+      viewport_height: "800",
+      full_page: "true",
       format: "jpg",
       image_quality: "78",
       block_ads: "true",

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unstable_cache } from "next/cache";
+
+export const maxDuration = 60;
 import crypto from "crypto";
 
 function signQuery(params: Record<string, string>, secret: string): string {

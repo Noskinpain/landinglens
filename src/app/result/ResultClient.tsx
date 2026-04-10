@@ -182,10 +182,15 @@ export default function ResultClient({
         .back-btn:hover {
           color: #fff !important;
         }
-        @media (max-width: 480px) {
+        @media (max-width: 600px) {
           .stat-grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 6px !important;
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .score-row {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
           }
           .cta-row {
             flex-direction: column !important;
@@ -323,6 +328,7 @@ export default function ResultClient({
 
               {/* Score + Verdict row */}
               <div
+                className="score-row"
                 style={{
                   display: "flex",
                   alignItems: "flex-start",
@@ -514,6 +520,52 @@ export default function ResultClient({
                   <div key={i} className="skeleton" style={{ height: 72, borderRadius: 10 }} />
                 ))}
               </div>
+            </div>
+          )}
+
+          {analyzeError && (
+            <div
+              className="fade-up"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                background: "rgba(255, 107, 107, 0.05)",
+                border: "1px solid rgba(255, 107, 107, 0.2)",
+                borderRadius: 16,
+                padding: "50px 20px",
+                height: "100%",
+                minHeight: 320,
+              }}
+            >
+              <span style={{ fontSize: 42, marginBottom: 16 }}>⏳</span>
+              <h3 style={{ fontSize: 20, fontWeight: 800, fontFamily: "var(--font-heading)", color: "#ff6b6b", marginBottom: 12 }}>
+                Analysis Timed Out
+              </h3>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", maxWidth: 320, marginBottom: 24, lineHeight: 1.5 }}>
+                Our AI servers were heavily loaded or your page took too long to capture. Please give it one more try!
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  background: "#ff6b6b",
+                  color: "#0a0a0a",
+                  border: "none",
+                  borderRadius: 10,
+                  padding: "14px 28px",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  fontFamily: "var(--font-heading)",
+                  cursor: "pointer",
+                  transition: "transform 0.2s",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+              >
+                Try Again
+              </button>
             </div>
           )}
         </div>

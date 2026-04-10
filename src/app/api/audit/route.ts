@@ -41,7 +41,7 @@ async function takeScreenshot(url: string, force: boolean) {
   const timeoutId = setTimeout(() => controller.abort(), 25000);
   
   const response = await fetch(screenshotUrl, {
-    cache: force ? "no-store" : "force-cache",
+    cache: "no-store",
     signal: controller.signal
   });
   
@@ -132,7 +132,7 @@ Respond ONLY with raw valid JSON. No markdown, no backticks.`,
           },
         ],
       }),
-      cache: force ? "no-store" : "force-cache",
+      cache: "no-store",
     },
   );
 

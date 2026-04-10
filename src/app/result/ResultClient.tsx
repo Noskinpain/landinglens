@@ -532,37 +532,32 @@ export default function ResultClient({
                 alignItems: "center",
                 justifyContent: "center",
                 textAlign: "center",
-                background: "rgba(255, 107, 107, 0.05)",
-                border: "1px solid rgba(255, 107, 107, 0.2)",
+                background: "rgba(255,255,255,0.03)",
+                border: "1px solid rgba(255,255,255,0.08)",
                 borderRadius: 16,
-                padding: "50px 20px",
+                padding: "60px 20px",
                 height: "100%",
                 minHeight: 320,
               }}
             >
-              <span style={{ fontSize: 42, marginBottom: 16 }}>⏳</span>
-              <h3 style={{ fontSize: 20, fontWeight: 800, fontFamily: "var(--font-heading)", color: "#ff6b6b", marginBottom: 12 }}>
-                Analysis Timed Out
+              <h3 style={{ fontSize: 18, fontWeight: 700, fontFamily: "var(--font-heading)", color: "#fff", marginBottom: 8 }}>
+                Something went wrong
               </h3>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", maxWidth: 320, marginBottom: 24, lineHeight: 1.5 }}>
-                Our AI servers were heavily loaded or your page took too long to capture. Please give it one more try!
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
+                We couldn't analyze this page. Please try again.
               </p>
               <button
                 onClick={() => window.location.reload()}
                 style={{
-                  background: "#ff6b6b",
+                  background: "#fff",
                   color: "#0a0a0a",
                   border: "none",
-                  borderRadius: 10,
-                  padding: "14px 28px",
-                  fontSize: 14,
-                  fontWeight: 800,
-                  fontFamily: "var(--font-heading)",
+                  borderRadius: 8,
+                  padding: "10px 20px",
+                  fontSize: 13,
+                  fontWeight: 700,
                   cursor: "pointer",
-                  transition: "transform 0.2s",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
-                onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
               >
                 Try Again
               </button>

@@ -88,7 +88,7 @@ function ResultContent() {
     const timeoutId = window.setTimeout(() => {
       setScreenshotLoading(false);
       setScreenshotError(true);
-    }, 15000);
+    }, 40000);
 
     return () => window.clearTimeout(timeoutId);
   }, [screenshotSrc, screenshotLoading, screenshotError]);

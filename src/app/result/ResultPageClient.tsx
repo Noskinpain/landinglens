@@ -14,6 +14,7 @@ function normalizeUrl(input: string) {
 function ResultContent() {
   const searchParams = useSearchParams();
   const rawUrl = searchParams.get("url") || "";
+  const force = searchParams.get("force") === "true";
   const url = normalizeUrl(rawUrl);
 
   const [screenshotSrc, setScreenshotSrc] = useState<string | null>(null);
@@ -41,11 +42,11 @@ function ResultContent() {
     setResult(null);
     setAnalyzeError(false);
 
-    setScreenshotSrc(`/api/screenshot?url=${encodeURIComponent(url)}`);
+    setScreenshotSrc(`/api/screenshot?url=${encodeURIComponent(url)}&force=${force}`);
 
     async function loadAudit() {
       try {
-        const res = await fetch(`/api/audit?url=${encodeURIComponent(url)}`, {
+        const res = await fetch(`/api/audit?url=${encodeURIComponent(url)}&force=${force}`, {
           signal: controller.signal,
           cache: "no-store",
         });
@@ -79,7 +80,7 @@ function ResultContent() {
       cancelled = true;
       controller.abort();
     };
-  }, [url]);
+  }, [url, force]);
 
   useEffect(() => {
     if (!screenshotSrc || !screenshotLoading || screenshotError) return;

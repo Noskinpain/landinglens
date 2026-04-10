@@ -12,6 +12,13 @@ type Issue = {
   fix: string;
 };
 
+export type TeardownSection = {
+  section_name: string;
+  status: "pass" | "fail";
+  analysis: string;
+  fix: string;
+};
+
 export type AuditResult = {
   score: number;
   grade: string;
@@ -19,10 +26,13 @@ export type AuditResult = {
   stats: {
     issues_found: number;
     critical_count: number;
-    bounce_estimate: string;
-    upside: string;
+    critical_count: number;
+    main_bottleneck: string;
+    bottleneck_impact: string;
+    quick_win: string;
+    quick_win_detail: string;
   };
-  issues: Issue[];
+  teardown: TeardownSection[];
 };
 
 function severityColor(s: string) {
@@ -83,13 +93,13 @@ export default function ResultClient({
 }: ResultClientProps) {
   const router = useRouter();
   const [downloading, setDownloading] = useState(false);
-  const [expandedIssues, setExpandedIssues] = useState<Set<number>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
-  function toggleIssue(id: number) {
-    setExpandedIssues((prev) => {
+  function toggleSection(idx: number) {
+    setExpandedSections((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
       return next;
     });
   }
@@ -218,7 +228,7 @@ export default function ResultClient({
             letterSpacing: "-0.02em",
           }}
         >
-          🔍 LandingLens
+          LandingLens
         </button>
 
         {/* URL pill */}
@@ -421,23 +431,22 @@ export default function ResultClient({
               >
                 {[
                   {
-                    label: "Issues",
-                    value: String(result.stats.issues_found),
-                    sub: `${result.stats.critical_count} critical`,
-                    color:
-                      result.stats.critical_count > 0 ? "#ff6b6b" : "#5cb85c",
-                  },
-                  {
-                    label: "Bounce est.",
-                    value: result.stats.bounce_estimate,
-                    sub: "Leave w/o action",
-                    color: "#f0f0f0",
-                  },
-                  {
-                    label: "Upside",
-                    value: result.stats.upside,
-                    sub: "With fixes",
+                    label: "Passed",
+                    value: String(result.teardown.filter((s) => s.status === "pass").length),
+                    sub: `out of ${result.teardown.length} sections`,
                     color: "#5cb85c",
+                  },
+                  {
+                    label: "Main Bottleneck",
+                    value: result.stats.main_bottleneck,
+                    sub: result.stats.bottleneck_impact,
+                    color: "#ff6b6b",
+                  },
+                  {
+                    label: "Quick Win",
+                    value: result.stats.quick_win,
+                    sub: result.stats.quick_win_detail,
+                    color: "#f0a500",
                   },
                 ].map((s) => (
                   <div
@@ -684,9 +693,7 @@ export default function ResultClient({
                   fontFamily: "var(--font-heading)",
                 }}
               >
-                {result.stats.critical_count > 0
-                  ? "Issues ranked by damage"
-                  : "Full breakdown"}
+                Full Teardown
               </p>
               <span
                 style={{
@@ -695,7 +702,7 @@ export default function ResultClient({
                   fontWeight: 600,
                 }}
               >
-                {result.issues.length} areas
+                {result.teardown.length} sections
               </span>
             </div>
 
@@ -707,25 +714,24 @@ export default function ResultClient({
                 marginBottom: 12,
               }}
             >
-              {result.issues.map((issue, idx) => {
-                const badge = severityBadge(issue.severity);
-                const isExpanded = expandedIssues.has(issue.id);
+              {result.teardown.map((section, idx) => {
+                const isPass = section.status === "pass";
+                const isExpanded = expandedSections.has(idx);
                 return (
                   <div
-                    key={issue.id}
+                    key={idx}
                     className="issue-card"
-                    onClick={() => toggleIssue(issue.id)}
+                    onClick={() => toggleSection(idx)}
                     style={{
                       background: "#111",
                       borderRadius: 14,
                       border: "1px solid rgba(255,255,255,0.08)",
-                      borderLeft: `3px solid ${severityColor(issue.severity)}`,
+                      borderLeft: `3px solid ${isPass ? "var(--success)" : "var(--critical)"}`,
                       padding: "16px 18px",
                       cursor: "pointer",
                       animation: `fadeUp 0.3s ease ${idx * 0.05}s both`,
                     }}
                   >
-                    {/* Header row */}
                     <div
                       style={{
                         display: "flex",
@@ -755,7 +761,7 @@ export default function ResultClient({
                             textOverflow: "ellipsis",
                           }}
                         >
-                          {issue.label}
+                          {section.section_name}
                         </span>
                       </div>
 
@@ -773,13 +779,13 @@ export default function ResultClient({
                             fontWeight: 700,
                             padding: "3px 10px",
                             borderRadius: 999,
-                            background: badge.bg,
-                            color: badge.color,
+                            background: isPass ? "rgba(59,109,17,0.1)" : "rgba(163,45,45,0.1)",
+                            color: isPass ? "#5cb85c" : "#ff6b6b",
                             letterSpacing: "0.04em",
                             textTransform: "uppercase",
                           }}
                         >
-                          {badge.label}
+                          {isPass ? "Pass" : "Fail"}
                         </span>
                         <span
                           style={{
@@ -797,47 +803,6 @@ export default function ResultClient({
                       </div>
                     </div>
 
-                    {/* Score bar — always visible */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        marginTop: 12,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 11,
-                          color: barColor(issue.score),
-                          fontWeight: 700,
-                          minWidth: 28,
-                          fontFamily: "var(--font-heading)",
-                        }}
-                      >
-                        {issue.score}/10
-                      </span>
-                      <div
-                        style={{
-                          flex: 1,
-                          height: 3,
-                          background: "rgba(255,255,255,0.07)",
-                          borderRadius: 99,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: `${issue.score * 10}%`,
-                            height: 3,
-                            background: barColor(issue.score),
-                            borderRadius: 99,
-                            transition: "width 0.7s ease",
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Expandable content */}
                     {isExpanded && (
                       <div
                         style={{
@@ -850,12 +815,12 @@ export default function ResultClient({
                         <p
                           style={{
                             fontSize: 13,
-                            color: "rgba(255,255,255,0.5)",
+                            color: "rgba(255,255,255,0.6)",
                             lineHeight: 1.7,
                             marginBottom: 14,
                           }}
                         >
-                          {issue.roast}
+                          {section.analysis}
                         </p>
 
                         <div
@@ -876,19 +841,17 @@ export default function ResultClient({
                               fontWeight: 700,
                             }}
                           >
-                            {issue.severity === "good"
-                              ? "Minor tweak"
-                              : "Try this instead"}
+                            {isPass ? "Optimization Tip" : "Fix Right Now"}
                           </div>
                           <p
                             style={{
                               fontSize: 13,
-                              color: "rgba(255,255,255,0.75)",
+                              color: "rgba(255,255,255,0.85)",
                               lineHeight: 1.6,
                               fontStyle: "italic",
                             }}
                           >
-                            {issue.fix}
+                            {section.fix}
                           </p>
                         </div>
                       </div>
@@ -1005,6 +968,31 @@ export default function ResultClient({
                   }}
                 >
                   🔗 Copy link
+                </button>
+                <button
+                  className="copy-btn"
+                  onClick={() => {
+                    router.push(`/result?url=${encodeURIComponent(url)}&force=true`);
+                  }}
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 10,
+                    padding: "13px 18px",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                    transition: "background 0.2s, border-color 0.2s",
+                    whiteSpace: "nowrap",
+                    flexBasis: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    marginTop: 4
+                  }}
+                >
+                  ♻️ I updated my page — Re-audit
                 </button>
               </div>
             </div>

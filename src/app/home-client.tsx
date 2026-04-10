@@ -381,14 +381,37 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
             />
           )}
 
-          <p
-            style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 14 }}
-          >
-            <strong style={{ color: "var(--text-secondary)" }}>
-              200+ founders
-            </strong>{" "}
-            have already audited their page.
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: 14 }}>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              {[
+                "https://randomuser.me/api/portraits/men/32.jpg",
+                "https://randomuser.me/api/portraits/women/44.jpg",
+                "https://randomuser.me/api/portraits/men/68.jpg",
+                "https://randomuser.me/api/portraits/women/65.jpg",
+              ].map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    border: "2px solid var(--bg)",
+                    marginLeft: i === 0 ? 0 : -10,
+                    zIndex: 10 - i,
+                    position: "relative",
+                  }}
+                  alt=""
+                />
+              ))}
+            </div>
+            <p style={{ fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+              <strong style={{ color: "var(--text-secondary)" }}>
+                200+ founders
+              </strong>{" "}
+              have already audited their page.
+            </p>
+          </div>
 
           <div
             style={{
@@ -560,18 +583,36 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
         style={{
           background: "var(--text-primary)",
           borderTop: "1px solid rgba(255,255,255,0.08)",
-          padding: "16px 24px",
+          padding: "32px 24px 24px",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "space-between",
-          fontSize: 12,
-          color: "rgba(255,255,255,0.35)",
+          gap: 24,
+          fontSize: 13,
+          color: "rgba(255,255,255,0.45)",
         }}
       >
-        <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700 }}>
-          © 2026 LandingLens
-        </span>
-        <span>Built by samteic</span>
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap", justifyContent: "center" }}>
+          <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Privacy Policy</a>
+          <a href="/terms" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Terms of Service</a>
+          <a href="mailto:support@loxlite.com" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Contact Us</a>
+        </div>
+        
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "space-between", 
+          width: "100%", 
+          maxWidth: 1000,
+          borderTop: "1px solid rgba(255,255,255,0.05)",
+          paddingTop: 24,
+          fontSize: 12
+        }}>
+          <span style={{ fontFamily: "var(--font-heading)", fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>
+            © 2026 LandingLens
+          </span>
+          <span>Built by samteic</span>
+        </div>
       </footer>
     </main>
   );

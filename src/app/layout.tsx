@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,6 +13,28 @@ export const metadata: Metadata = {
   title: "LandingLens — Landing Page Audit Tool",
   description:
     "Drop your URL. Get a scored, specific breakdown of every problem on your page — with exact fixes.",
+  openGraph: {
+    title: "LandingLens — Landing Page Audit Tool",
+    description: "Drop your URL. Get a scored, specific breakdown of every problem on your page — with exact fixes.",
+    url: "https://landinglens.com",
+    siteName: "LandingLens",
+    images: [
+      {
+        url: "/og-image.jpg", // Make sure to add this image to /public
+        width: 1200,
+        height: 630,
+        alt: "LandingLens Preview",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LandingLens — Landing Page Audit Tool",
+    description: "Drop your URL. Get a scored, specific breakdown of every problem on your page — with exact fixes.",
+    images: ["/og-image.jpg"],
+  },
 };
 
 export default function RootLayout({
@@ -29,7 +52,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

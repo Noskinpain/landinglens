@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
 import crypto from "crypto";
 
 function signQuery(params: Record<string, string>, secret: string): string {
@@ -14,6 +13,7 @@ function signQuery(params: Record<string, string>, secret: string): string {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const url = searchParams.get("url");
+  const force = searchParams.get("force") === "true";
 
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
@@ -39,17 +39,18 @@ export async function GET(req: NextRequest) {
     const signedQuery = signQuery(params, secretKey);
     const screenshotUrl = `https://api.screenshotone.com/take?${signedQuery}`;
 
-    const response = await axios.get(screenshotUrl, {
-      responseType: "arraybuffer",
-      timeout: 25000,
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000);
+    const response = await fetch(screenshotUrl, {
+      cache: force ? "no-store" : "force-cache",
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
 
-    // Check if response is JSON (error) instead of an image
-    const contentType = response.headers["content-type"] || "";
+    const contentType = response.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const decoded = Buffer.from(response.data).toString("utf-8");
-      const parsed = JSON.parse(decoded);
-      const errorCode = parsed?.error_code || "unknown";
+      const data = await response.json();
+      const errorCode = data?.error_code || "unknown";
 
       if (errorCode === "name_not_resolved") {
         return NextResponse.json(
@@ -62,55 +63,27 @@ export async function GET(req: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: parsed?.error_message || "Screenshot failed." },
+        { error: data?.error_message || "Screenshot failed." },
         { status: 500 },
       );
     }
 
-    return new NextResponse(response.data, {
+    const arrayBuffer = await response.arrayBuffer();
+    return new NextResponse(arrayBuffer, {
       status: 200,
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": force ? "no-store" : "public, max-age=3600",
       },
     });
   } catch (err: any) {
-    if (err.code === "ECONNABORTED") {
+    if (err.name === "AbortError" || err.code === "ECONNABORTED") {
       return NextResponse.json(
         { error: "Screenshot timed out. Please try again." },
         { status: 504 },
       );
     }
-
-    if (err.response?.data) {
-      const decoded = Buffer.from(err.response.data).toString("utf-8");
-      try {
-        const parsed = JSON.parse(decoded);
-        const errorCode = parsed?.error_code || "unknown";
-
-        if (errorCode === "name_not_resolved") {
-          return NextResponse.json(
-            {
-              error:
-                "URL does not exist. Please check the address and try again.",
-            },
-            { status: 422 },
-          );
-        }
-
-        return NextResponse.json(
-          { error: parsed?.error_message || "Screenshot failed." },
-          { status: 500 },
-        );
-      } catch {
-        return NextResponse.json(
-          { error: "Screenshot failed." },
-          { status: 500 },
-        );
-      }
-    }
-
-    console.error("Screenshot error:", err.message);
+    console.error("Screenshot error:", err.message || err);
     return NextResponse.json({ error: "Screenshot failed." }, { status: 500 });
   }
 }

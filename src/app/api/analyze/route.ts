@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const force = req.nextUrl.searchParams.get("force") === "true";
     const { screenshotBase64 } = await req.json();
 
     if (!screenshotBase64) {
@@ -53,28 +54,26 @@ Return a JSON object with this exact structure:
   "stats": {
     "issues_found": <total number of issues found>,
     "critical_count": <number of critical issues>,
-    "bounce_estimate": <estimated bounce rate as string e.g. "~65%">,
-    "upside": <conversion upside if fixes applied e.g. "+2.4x" or "+12%">
+    "main_bottleneck": <2-4 words. Be brutally specific (e.g. "Confusing value proposition", "Headline is invisible", "Boring wall of text").>,
+    "bottleneck_impact": <4-8 words. Explain the consequence. (e.g. "Visitors don't understand what you do -> they leave").>,
+    "quick_win": <2-4 words. The easiest actionable change. (e.g. "Simplify headline", "Add a bold CTA").>,
+    "quick_win_detail": <4-8 words. Explain what to do exactly. (e.g. "Make the expected outcome obvious in 5 seconds").>
   },
-  "issues": [
+  "teardown": [
     {
-      "id": <number>,
-      "label": <2-4 word simple issue name e.g. "Headline is confusing", "Invisible Button", "Wall of Text">,
-      "severity": <"critical" | "warning" | "good">,
-      "score": <number 1-10>,
-      "roast": <1-2 sentences. Brutal, plain-English explanation of why this part sucks or works. Reference the exact text or color on the screen. No fluff.>,
-      "fix": <1 sentence concrete, dead-simple fix. What exactly should they change right now?>
+      "section_name": <e.g. "Hero Section", "Value Proposition", "Social Proof", "Objection Handling", "Call to Action">,
+      "status": <"pass" | "fail">,
+      "analysis": <3-4 sentences of deep dive analysis of this specific section. Identify exact text, colors, and layout blocks. Brutal and plain-English. Highlight what works well too.>,
+      "fix": <concrete, actionable prescription for this section. What exactly should they change right now?>
     }
   ]
 }
 
-Rules for issues:
-- Return 3-8 issues total. Focus on the real reasons people leave the site.
+Rules for teardown sections:
+- Provide 4-6 sections total (a complete teardown of the page top to bottom).
 - Never use generic text like "needs better UI" -> say "the gray text on a white background is impossible to read."
-- Never just say "make it pop" -> say "your main button is the same color as your background, change it to a bright contrast color."
-- "critical" = making people leave immediately
-- "warning" = annoying but not a dealbreaker
-- "good" = actually working well
+- If the page is great, mark sections as "pass" and give them immense credit for what they did right, while offering minor optimizations.
+- If it's bad, mark "fail" and explain exactly why people are leaving.
 
 Respond ONLY with raw valid JSON. No markdown, no backticks.`,
                 },
@@ -82,6 +81,7 @@ Respond ONLY with raw valid JSON. No markdown, no backticks.`,
             },
           ],
         }),
+        cache: force ? "no-store" : "force-cache",
       },
     );
 

@@ -1,38 +1,5 @@
 import jsPDF from "jspdf";
-
-type TeardownSection = {
-  section_name: string;
-  status: "pass" | "fail";
-  analysis: string;
-  fix: string;
-};
-
-type AuditResult = {
-  score: number;
-  grade: string;
-  verdict: string;
-  stats: {
-    issues_found: number;
-    critical_count: number;
-    main_bottleneck: string;
-    bottleneck_impact: string;
-    quick_win: string;
-    quick_win_detail: string;
-  };
-  teardown: TeardownSection[];
-  comprehensive_playbook?: string;
-};
-
-function statusRGB(status: string): [number, number, number] {
-  if (status === "fail") return [226, 75, 74];
-  return [99, 153, 34];
-}
-
-function scoreRGB(n: number): [number, number, number] {
-  if (n >= 75) return [99, 153, 34];
-  if (n >= 50) return [186, 117, 23];
-  return [226, 75, 74];
-}
+import type { AuditResult } from "@/app/api/audit/route";
 
 export async function exportToPdf(
   screenshotSrc: string,
@@ -44,130 +11,193 @@ export async function exportToPdf(
   const H = pdf.internal.pageSize.getHeight();
   const M = 14;
   const CW = W - M * 2;
-  const accent: [number, number, number] = [251, 191, 36];
-  const dark: [number, number, number] = [18, 18, 18];
-  const mid: [number, number, number] = [40, 40, 40];
-  const muted: [number, number, number] = [120, 120, 120];
-  const light: [number, number, number] = [220, 220, 220];
+
+  // Editorial Paper Theme Colors matching Landing Page
+  const paperBg: [number, number, number] = [245, 240, 235]; // #f5f0eb
+  const surfaceWhite: [number, number, number] = [255, 255, 255];
+  const surfaceMuted: [number, number, number] = [237, 233, 227]; // #ede9e3
+  const darkInk: [number, number, number] = [26, 26, 26]; // #1a1a1a
+  const mutedText: [number, number, number] = [120, 115, 110];
+  const borderRule: [number, number, number] = [210, 204, 196];
+  const criticalRed: [number, number, number] = [198, 40, 40];
+  const successGreen: [number, number, number] = [46, 125, 50];
 
   const newPage = () => {
     pdf.addPage();
-    pdf.setFillColor(...dark);
+    pdf.setFillColor(...paperBg);
     pdf.rect(0, 0, W, H, "F");
     return M;
   };
 
-  // ── Full dark background ──
-  pdf.setFillColor(...dark);
+  // Base canvas (Warm editorial paper)
+  pdf.setFillColor(...paperBg);
   pdf.rect(0, 0, W, H, "F");
 
-  // ── Cover page ──
-  // Top accent bar
-  pdf.setFillColor(...accent);
+  // Top Rule
+  pdf.setFillColor(...darkInk);
   pdf.rect(0, 0, W, 2, "F");
 
-  // Logo area
-  pdf.setFillColor(...mid);
-  pdf.rect(0, 0, W, 52, "F");
-  pdf.setFillColor(...accent);
-  pdf.rect(0, 0, W, 2, "F");
+  // Header Brand Block
+  pdf.setFillColor(...darkInk);
+  pdf.rect(0, 2, W, 38, "F");
 
-  pdf.setTextColor(...accent);
-  pdf.setFontSize(22);
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(18);
   pdf.setFont("helvetica", "bold");
-  pdf.text("LandingLens", M, 20);
+  pdf.text("LANDINGLENS", M, 16);
 
-  pdf.setTextColor(...light);
-  pdf.setFontSize(9);
-  pdf.setFont("helvetica", "normal");
-  pdf.text("LANDING PAGE AUDIT REPORT", M, 30);
-
-  pdf.setTextColor(...muted);
+  pdf.setTextColor(200, 195, 190);
   pdf.setFontSize(8);
-  pdf.text(url.replace(/^https?:\/\//, ""), M, 40);
+  pdf.setFont("helvetica", "normal");
+  pdf.text("EXECUTIVE CONVERSION RATE DIAGNOSTIC REPORT", M, 23);
+
+  const cleanDomain = url.replace(/^https?:\/\//, "");
+  pdf.text(`Target URL: ${cleanDomain} | Verified Response Latency: ${result.telemetry?.responseTimeMs || 0}ms`, M, 29);
   pdf.text(
-    `Generated ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`,
+    `Report Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`,
     M,
-    47,
+    35,
   );
 
-  let y = 68;
+  let y = 48;
 
-  // ── Score hero ──
-  const [sr, sg, sb] = scoreRGB(result.score);
-  pdf.setTextColor(sr, sg, sb);
-  pdf.setFontSize(72);
+  // ── Executive Score Hero Card ──
+  pdf.setFillColor(...surfaceWhite);
+  pdf.roundedRect(M, y, CW, 30, 2, 2, "F");
+  pdf.setDrawColor(...borderRule);
+  pdf.setLineWidth(0.3);
+  pdf.roundedRect(M, y, CW, 30, 2, 2, "D");
+
+  // Score Number
+  pdf.setTextColor(...darkInk);
+  pdf.setFontSize(44);
   pdf.setFont("helvetica", "bold");
-  pdf.text(`${result.score}`, M, y + 18);
+  pdf.text(`${result.score}`, M + 8, y + 18);
 
-  pdf.setTextColor(...muted);
-  pdf.setFontSize(18);
-  pdf.text("/100", M + 38, y + 18);
+  pdf.setTextColor(...mutedText);
+  pdf.setFontSize(12);
+  pdf.text("/ 100", M + 34, y + 18);
 
-  // Grade pill
-  pdf.setFillColor(...mid);
-  pdf.roundedRect(M, y + 24, 70, 10, 2, 2, "F");
-  pdf.setTextColor(...accent);
+  // Grade badge pill
+  pdf.setFillColor(...surfaceMuted);
+  pdf.roundedRect(M + 8, y + 21, 65, 6, 1, 1, "F");
+  pdf.setTextColor(...darkInk);
+  pdf.setFontSize(6.5);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(result.grade.toUpperCase(), M + 11, y + 25.5);
+
+  // Quick summary line next to score
+  pdf.setTextColor(...darkInk);
   pdf.setFontSize(9);
   pdf.setFont("helvetica", "bold");
-  pdf.text(`${result.grade.toUpperCase()}`, M + 4, y + 31);
+  const shortVerdict = pdf.splitTextToSize(`"${result.verdict.split(".")[0]}."`, CW - 65);
+  pdf.text(shortVerdict, M + 55, y + 10);
 
-  y += 46;
+  pdf.setTextColor(...mutedText);
+  pdf.setFontSize(7.5);
+  pdf.setFont("helvetica", "normal");
+  const verdictDetail = pdf.splitTextToSize(result.verdict.split(".").slice(1).join(".").trim(), CW - 65);
+  pdf.text(verdictDetail.slice(0, 3), M + 55, y + 18);
 
-  // ── Verdict ──
-  pdf.setDrawColor(...accent);
-  pdf.setLineWidth(0.5);
-  pdf.line(M, y, M + CW, y);
-  y += 8;
+  y += 36;
 
-  pdf.setTextColor(...light);
-  pdf.setFontSize(11);
-  pdf.setFont("helvetica", "bold");
-  const verdictLines = pdf.splitTextToSize(`"${result.verdict}"`, CW);
-  pdf.text(verdictLines, M, y);
-  y += verdictLines.length * 6 + 10;
+  // ── Telemetry Matrix ──
+  if (result.telemetry) {
+    pdf.setFillColor(...surfaceWhite);
+    pdf.roundedRect(M, y, CW, 14, 1.5, 1.5, "F");
+    pdf.setDrawColor(...borderRule);
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(M, y, CW, 14, 1.5, 1.5, "D");
 
-  // ── Stats row ──
-  const statW = CW / 3;
-  const stats = [
-    {
-      label: "PASSED",
-      value: `${result.teardown.filter(s => s.status === "pass").length}`,
-      sub: `out of ${result.teardown.length} sections`,
-    },
-    {
-      label: "MAIN BOTTLENECK",
-      value: result.stats.main_bottleneck,
-      sub: result.stats.bottleneck_impact,
-    },
-    {
-      label: "QUICK WIN",
-      value: result.stats.quick_win,
-      sub: result.stats.quick_win_detail,
-    },
-  ];
+    pdf.setFontSize(6.5);
+    pdf.setFont("helvetica", "bold");
 
-  stats.forEach((s, i) => {
-    const x = M + i * statW;
-    pdf.setFillColor(...mid);
-    pdf.roundedRect(x, y, statW - 3, 22, 2, 2, "F");
-    pdf.setTextColor(...muted);
+    const colW = CW / 4;
+    const tData = [
+      { k: "SERVER LATENCY", v: `${result.telemetry.responseTimeMs}ms` },
+      { k: "HEADING 1 NODE", v: result.telemetry.h1Count === 1 ? "1 (Verified)" : `${result.telemetry.h1Count} (Attention)` },
+      { k: "CONTENT VOLUME", v: `${result.telemetry.wordCount} words` },
+      { k: "SOCIAL PROOF DOM", v: result.telemetry.hasSocialProof ? "Verified" : "Unverified" },
+    ];
+
+    tData.forEach((t, i) => {
+      const tx = M + i * colW + 4;
+      pdf.setTextColor(...mutedText);
+      pdf.text(t.k, tx, y + 5);
+      pdf.setTextColor(...darkInk);
+      pdf.text(t.v, tx, y + 10);
+    });
+
+    y += 18;
+  }
+
+  // ── 5-Pillar Score Grid ──
+  if (result.pillars && result.pillars.length > 0) {
+    pdf.setTextColor(...darkInk);
+    pdf.setFontSize(7.5);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("CONVERSION PILLAR ASSESSMENT", M, y);
+    y += 4;
+
+    const pillarW = (CW - 8) / result.pillars.length;
+    result.pillars.forEach((p, idx) => {
+      const px = M + idx * (pillarW + 2);
+      pdf.setFillColor(...surfaceWhite);
+      pdf.roundedRect(px, y, pillarW, 20, 1.5, 1.5, "F");
+      pdf.setDrawColor(...borderRule);
+      pdf.roundedRect(px, y, pillarW, 20, 1.5, 1.5, "D");
+
+      // Progress bar line
+      const barColor = p.score >= 75 ? successGreen : p.score >= 60 ? darkInk : criticalRed;
+      pdf.setFillColor(...barColor);
+      pdf.rect(px, y, pillarW, 1, "F");
+
+      pdf.setTextColor(...mutedText);
+      pdf.setFontSize(5.5);
+      pdf.setFont("helvetica", "bold");
+      const nameLines = pdf.splitTextToSize(p.name, pillarW - 4);
+      pdf.text(nameLines[0] || "", px + 3, y + 5.5);
+
+      pdf.setTextColor(...darkInk);
+      pdf.setFontSize(10.5);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`${p.score}`, px + 3, y + 12.5);
+
+      pdf.setTextColor(...mutedText);
+      pdf.setFontSize(5);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(p.benchmark, px + 3, y + 17);
+    });
+
+    y += 25;
+  }
+
+  // ── 5-Second Test Diagnostic ──
+  if (result.five_second_test) {
+    pdf.setFillColor(...surfaceWhite);
+    pdf.roundedRect(M, y, CW, 21, 1.5, 1.5, "F");
+    pdf.setDrawColor(...borderRule);
+    pdf.setLineWidth(0.3);
+    pdf.roundedRect(M, y, CW, 21, 1.5, 1.5, "D");
+
+    pdf.setTextColor(...darkInk);
     pdf.setFontSize(7);
     pdf.setFont("helvetica", "bold");
-    pdf.text(s.label, x + 4, y + 7);
-    pdf.setTextColor(...accent);
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(s.value, x + 4, y + 16);
-    pdf.setTextColor(...muted);
-    pdf.setFontSize(7);
+    pdf.text("FIRST-IMPRESSION COGNITIVE ASSESSMENT", M + 5, y + 5.5);
+
+    pdf.setTextColor(...darkInk);
+    pdf.setFontSize(6.5);
     pdf.setFont("helvetica", "normal");
-    pdf.text(s.sub, x + 4, y + 21);
-  });
+    const l1 = pdf.splitTextToSize(`Immediate Interpretation: ${result.five_second_test.what_they_think_you_do}`, CW - 10);
+    const l2 = pdf.splitTextToSize(`Primary Exit Driver: ${result.five_second_test.top_bounce_reason}`, CW - 10);
+    pdf.text(l1[0] || "", M + 5, y + 11.5);
+    pdf.setTextColor(...criticalRed);
+    pdf.text(l2[0] || "", M + 5, y + 17);
 
-  y += 30;
+    y += 26;
+  }
 
-  // ── Screenshot ──
+  // ── Screenshot Verification ──
   try {
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -176,156 +206,159 @@ export async function exportToPdf(
       img.onload = () => res();
       img.onerror = () => rej();
     });
-    
-    const maxH = 120;
+
+    const maxH = 75;
     let imgH = (img.naturalHeight / img.naturalWidth) * CW;
     let imgW = CW;
     let offsetX = 0;
-    
+
     if (imgH > maxH) {
       imgH = maxH;
       imgW = imgH / (img.naturalHeight / img.naturalWidth);
       offsetX = (CW - imgW) / 2;
     }
 
-    if (y + imgH + 20 > H - 10) {
+    if (y + imgH + 16 > H - 10) {
       y = newPage();
     }
 
-    // Browser bar mock
-    pdf.setFillColor(...mid);
-    pdf.roundedRect(M + offsetX, y, imgW, imgH + 8, 3, 3, "F");
-    [
-      [255, 95, 87],
-      [254, 188, 46],
-      [40, 200, 64],
-    ].forEach(([r, g, b], i) => {
-      pdf.setFillColor(r, g, b);
-      pdf.circle(M + offsetX + 5 + i * 6, y + 4, 1.5, "F");
-    });
-
-    pdf.addImage(img, "JPEG", M + offsetX, y + 7, imgW, imgH);
-    y += imgH + 16;
+    pdf.setFillColor(...surfaceMuted);
+    pdf.roundedRect(M + offsetX, y, imgW, imgH + 4, 1.5, 1.5, "F");
+    pdf.addImage(img, "JPEG", M + offsetX, y + 3, imgW, imgH);
+    y += imgH + 9;
   } catch {
     y += 4;
   }
 
-  // ── Issues ──
-  pdf.setDrawColor(...accent);
-  pdf.setLineWidth(0.5);
-  pdf.line(M, y, M + CW, y);
-  y += 8;
+  // ── Technical Teardowns & Revisions ──
+  if (y + 40 > H - 16) {
+    y = newPage();
+  }
 
-  pdf.setTextColor(...muted);
+  pdf.setDrawColor(...borderRule);
+  pdf.setLineWidth(0.4);
+  pdf.line(M, y, M + CW, y);
+  y += 6;
+
+  pdf.setTextColor(...darkInk);
   pdf.setFontSize(8);
   pdf.setFont("helvetica", "bold");
-  pdf.text("FULL TEARDOWN", M, y);
-  y += 8;
+  pdf.text("DIAGNOSTIC TEARDOWNS & COPY REVISIONS", M, y);
+  y += 6;
 
   result.teardown.forEach((section) => {
-    const roastLines = pdf.splitTextToSize(section.analysis, CW - 12);
-    const fixLines = pdf.splitTextToSize(`→ ${section.fix}`, CW - 12);
-    const cardH = 12 + roastLines.length * 5 + 6 + fixLines.length * 5 + 10;
+    const analysisLines = pdf.splitTextToSize(section.analysis, CW - 12);
+    const beforeLines = section.before_example ? pdf.splitTextToSize(`Observed Baseline: ${section.before_example}`, CW - 16) : [];
+    const afterLines = section.after_rewrite ? pdf.splitTextToSize(`Prescribed Revision: ${section.after_rewrite}`, CW - 16) : [];
+    const fixLines = pdf.splitTextToSize(`Action Protocol: ${section.fix}`, CW - 12);
+
+    let cardH = 14 + analysisLines.length * 4 + fixLines.length * 4;
+    if (beforeLines.length > 0) cardH += beforeLines.length * 3.5 + 4;
+    if (afterLines.length > 0) cardH += afterLines.length * 3.5 + 4;
 
     if (y + cardH > H - 16) {
       y = newPage();
     }
 
-    const [br, bg, bb] = statusRGB(section.status);
+    // Card surface
+    pdf.setFillColor(...surfaceWhite);
+    pdf.roundedRect(M, y, CW, cardH, 1.5, 1.5, "F");
+    pdf.setDrawColor(...borderRule);
+    pdf.roundedRect(M, y, CW, cardH, 1.5, 1.5, "D");
 
-    // Card bg
-    pdf.setFillColor(...mid);
-    pdf.roundedRect(M, y, CW, cardH, 2, 2, "F");
-
-    // Severity left bar
+    // Left border indicator
+    const [br, bg, bb] = section.status === "pass" ? darkInk : criticalRed;
     pdf.setFillColor(br, bg, bb);
-    pdf.roundedRect(M, y, 2.5, cardH, 1, 1, "F");
+    pdf.rect(M, y, 2, cardH, "F");
 
-    // Label
-    pdf.setFontSize(10);
+    // Title
+    pdf.setFontSize(8.5);
     pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(...light);
-    pdf.text(section.section_name, M + 8, y + 7);
+    pdf.setTextColor(...darkInk);
+    pdf.text(section.section_name, M + 6, y + 6);
 
     // Status
-    pdf.setFontSize(8);
+    pdf.setFontSize(6.5);
     pdf.setTextColor(br, bg, bb);
-    pdf.text(section.status.toUpperCase(), W - M - 14, y + 7);
+    pdf.text(section.status === "pass" ? "COMPLIANT" : "NON-COMPLIANT", W - M - 24, y + 6);
 
-    // Analysis text
-    pdf.setFontSize(8.5);
+    // Analysis
+    pdf.setFontSize(7.5);
     pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(...muted);
-    pdf.text(roastLines, M + 8, y + 16);
+    pdf.setTextColor(...darkInk);
+    pdf.text(analysisLines, M + 6, y + 12);
 
-    // Fix box
-    const fixY = y + 16 + roastLines.length * 5 + 2;
-    pdf.setFillColor(30, 30, 30);
-    pdf.roundedRect(M + 6, fixY, CW - 12, fixLines.length * 5 + 6, 1, 1, "F");
-    pdf.setFontSize(8);
+    let currentCardY = y + 12 + analysisLines.length * 4 + 2;
+
+    // Prescribed Revision Box
+    if (section.after_rewrite) {
+      pdf.setFillColor(...surfaceMuted);
+      const rwH = afterLines.length * 3.8 + 4;
+      pdf.roundedRect(M + 6, currentCardY, CW - 12, rwH, 1, 1, "F");
+      pdf.setDrawColor(...darkInk);
+      pdf.setLineWidth(0.2);
+      pdf.roundedRect(M + 6, currentCardY, CW - 12, rwH, 1, 1, "D");
+      pdf.setTextColor(...darkInk);
+      pdf.setFontSize(7);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(afterLines, M + 9, currentCardY + 3.5);
+      currentCardY += rwH + 3;
+    }
+
+    // Action protocol
+    pdf.setTextColor(...mutedText);
+    pdf.setFontSize(7);
     pdf.setFont("helvetica", "italic");
-    pdf.setTextColor(...accent);
-    pdf.text(fixLines, M + 10, fixY + 6);
+    pdf.text(fixLines, M + 6, currentCardY + 2);
 
-    y += cardH + 6;
+    y += cardH + 4;
   });
 
-  // ── Premium Comprehensive Playbook ──
+  // ── Roadmap Protocol ──
   if (result.comprehensive_playbook) {
     newPage();
-    let pbY = 30;
+    let pbY = 20;
 
-    pdf.setFillColor(...accent);
+    pdf.setFillColor(...darkInk);
     pdf.rect(0, 0, W, 2, "F");
 
-    pdf.setTextColor(...accent);
-    pdf.setFontSize(16);
+    pdf.setTextColor(...darkInk);
+    pdf.setFontSize(13);
     pdf.setFont("helvetica", "bold");
-    pdf.text("1-MONTH CONVERSION ROADMAP", M, pbY);
-    pbY += 12;
-    
-    pdf.setDrawColor(...accent);
-    pdf.setLineWidth(0.5);
+    pdf.text("30-DAY STRATEGIC CONVERSION PROTOCOL", M, pbY);
+    pbY += 7;
+
+    pdf.setDrawColor(...borderRule);
+    pdf.setLineWidth(0.4);
     pdf.line(M, pbY, M + CW, pbY);
-    pbY += 12;
+    pbY += 6;
 
-    pdf.setTextColor(...light);
-    pdf.setFontSize(9.5);
+    pdf.setTextColor(...darkInk);
+    pdf.setFontSize(8);
     pdf.setFont("helvetica", "normal");
-    
-    // Split by newlines from LLM to preserve paragraphs
-    const paragraphs = result.comprehensive_playbook.split('\n');
-    
-    paragraphs.forEach(paragraph => {
-      // Ignore empty lines
-      if (paragraph.trim() === "") return;
-      
-      const pgLines = pdf.splitTextToSize(paragraph, CW);
-      const blockH = pgLines.length * 5;
-      
-      if (pbY + blockH > H - 20) {
-        pbY = newPage() + 20;
+
+    const paragraphs = result.comprehensive_playbook.split("\n");
+    paragraphs.forEach((p) => {
+      if (p.trim() === "") return;
+      const pgLines = pdf.splitTextToSize(p, CW);
+      const bH = pgLines.length * 4.2;
+      if (pbY + bH > H - 18) {
+        pbY = newPage() + 12;
       }
-      
       pdf.text(pgLines, M, pbY);
-      pbY += blockH + 6; // Add spacing between paragraphs
+      pbY += bH + 4;
     });
-    
-    y = pbY;
   }
 
-  // ── Footer on last page ──
-  if (y + 14 > H) {
-    y = newPage();
-  }
-  pdf.setDrawColor(...mid);
+  // Footer on last page
+  pdf.setDrawColor(...borderRule);
   pdf.setLineWidth(0.3);
-  pdf.line(M, H - 12, W - M, H - 12);
-  pdf.setFontSize(7);
+  pdf.line(M, H - 9, W - M, H - 9);
+  pdf.setFontSize(6.5);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(...muted);
-  pdf.text("LandingLens · landinglens.com", M, H - 6);
-  pdf.text(`Score: ${result.score}/100 · ${result.grade}`, W - M - 35, H - 6);
+  pdf.setTextColor(...mutedText);
+  pdf.text("LANDINGLENS — Editorial Conversion Diagnostic", M, H - 4.5);
+  pdf.text(`Overall Conversion Index: ${result.score}/100`, W - M - 40, H - 4.5);
 
-  pdf.save(`landinglens-audit-${Date.now()}.pdf`);
+  pdf.save(`landinglens-diagnostic-${Date.now()}.pdf`);
 }

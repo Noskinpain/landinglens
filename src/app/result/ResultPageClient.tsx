@@ -114,8 +114,22 @@ export default function ResultPageClient() {
   return (
     <Suspense
       fallback={
-        <div style={{ minHeight: "100dvh", background: "#0a0a0a", color: "#fff", display: "grid", placeItems: "center" }}>
-          Loading audit results...
+        <div style={{ minHeight: "100dvh", background: "#1a1a1a", color: "rgba(255,255,255,0.7)", display: "grid", placeItems: "center", fontFamily: "var(--font-body)" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+            <div
+              style={{
+                width: 26,
+                height: 26,
+                border: "2px solid rgba(255,255,255,0.15)",
+                borderTopColor: "#ffffff",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: "-0.01em" }}>
+              Initializing diagnostic audit...
+            </span>
+          </div>
         </div>
       }
     >

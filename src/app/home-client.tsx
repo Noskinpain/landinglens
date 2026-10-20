@@ -595,7 +595,7 @@ export default function HomeClient({ initialUrl }: HomeClientProps) {
         <div style={{ display: "flex", gap: 32, flexWrap: "wrap", justifyContent: "center" }}>
           <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Privacy Policy</a>
           <a href="/terms" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Terms of Service</a>
-          <a href="mailto:support@loxlite.com" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Contact Us</a>
+          <a href="mailto:hello@landinglens.com" style={{ color: "inherit", textDecoration: "none" }} onMouseOver={(e) => e.currentTarget.style.color="white"} onMouseOut={(e) => e.currentTarget.style.color="rgba(255,255,255,0.45)"}>Contact Us</a>
         </div>
         
         <div style={{ 

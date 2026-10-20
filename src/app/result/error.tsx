@@ -21,8 +21,8 @@ export default function ResultError({
     <div
       style={{
         minHeight: "100dvh",
-        background: "#0a0a0a",
-        color: "#fff",
+        background: "#1a1a1a",
+        color: "#ffffff",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -31,40 +31,42 @@ export default function ResultError({
         fontFamily: "var(--font-body), sans-serif",
       }}
     >
-      <h2 style={{ fontSize: 20, fontWeight: "bold", marginBottom: 12 }}>
-        Something went wrong on the result page!
+      <h2 style={{ fontSize: 20, fontWeight: 800, fontFamily: "var(--font-heading)", marginBottom: 12 }}>
+        Diagnostic Failed
       </h2>
-      <p style={{ color: "#ff6b6b", marginBottom: 24, maxWidth: 500, textAlign: "center", wordBreak: "break-word" }}>
-        {error.message || "Unknown error"}
+      <p style={{ color: "#f87171", marginBottom: 24, maxWidth: 500, textAlign: "center", wordBreak: "break-word", fontSize: 13.5 }}>
+        {error.message || "Unable to complete landing page teardown."}
       </p>
       <div style={{ display: "flex", gap: 12 }}>
         <button
           onClick={() => reset()}
           style={{
-            background: "#fff",
-            color: "#0a0a0a",
-            padding: "10px 16px",
-            borderRadius: 8,
+            background: "#ffffff",
+            color: "#1a1a1a",
+            padding: "10px 18px",
+            borderRadius: "var(--radius-sm)",
             border: "none",
-            fontWeight: "bold",
+            fontWeight: 700,
+            fontSize: 13,
             cursor: "pointer",
           }}
         >
-          Try again
+          Retry Diagnostic
         </button>
         <button
           onClick={() => router.push("/")}
           style={{
             background: "transparent",
-            color: "#fff",
-            border: "1px solid #333",
-            padding: "10px 16px",
-            borderRadius: 8,
-            fontWeight: "bold",
+            color: "#ffffff",
+            border: "1px solid rgba(255,255,255,0.2)",
+            padding: "10px 18px",
+            borderRadius: "var(--radius-sm)",
+            fontWeight: 700,
+            fontSize: 13,
             cursor: "pointer",
           }}
         >
-          Go Home
+          Return Home
         </button>
       </div>
     </div>
